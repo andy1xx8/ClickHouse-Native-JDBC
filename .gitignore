@@ -5,3 +5,6 @@
 .project
 .idea/
 target/
+dependency-reduced-pom.xml
+node_modules/
+.DS_Store

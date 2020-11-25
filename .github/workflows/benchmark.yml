@@ -1,21 +1,21 @@
-name: benchmark-tests
+name: benchmark
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, 2.4 ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, 2.4 ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - name: Set up JDK 1.8
+      - name: Set up JDK
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 8
       - name: Start clickhouse-server
         run: docker-compose up -d
       - name: Run benchmarks
-        run: mvn -B -Pbenchmark clean integration-test
+        run: mvn -B -Pbenchmark clean integration-test -DskipITs

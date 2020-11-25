@@ -1,84 +1,104 @@
-[![Build Status](https://travis-ci.org/housepower/ClickHouse-Native-JDBC.svg?branch=master)](https://travis-ci.org/housepower/ClickHouse-Native-JDBC)
+ClickHouse Native JDBC
+======================
 
-# ClickHouse-Native-JDBC
+[![Build Status](https://github.com/housepower/ClickHouse-Native-JDBC/workflows/build/badge.svg?branch=master)](https://github.com/housepower/ClickHouse-Native-JDBC/actions?query=workflow%3Abuild+branch%3Amaster)
+[![codecov.io](https://codecov.io/github/housepower/ClickHouse-Native-JDBC/coverage.svg?branch=master)](https://codecov.io/github/housepower/ClickHouse-Native-JDBC?branch=master)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.housepower/clickhouse-native-jdbc-parent/badge.svg)](https://search.maven.org/search?q=com.github.housepower)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/housepower/ClickHouse-Native-JDBC.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/housepower/ClickHouse-Native-JDBC/alerts/)
+[![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/housepower/ClickHouse-Native-JDBC.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/housepower/ClickHouse-Native-JDBC/context:java)
+[![License](https://img.shields.io/github/license/housepower/ClickHouse-Native-JDBC)](https://github.com/housepower/ClickHouse-Native-JDBC/blob/master/LICENSE)
 
-This is a native JDBC library for accessing [ClickHouse](https://clickhouse.yandex/) in Java.
+English | [简体中文](README_zh.md)
 
+## [Home Page](https://housepower.github.io/ClickHouse-Native-JDBC/)
 
-## Use the latest code
+A Native JDBC library for accessing [ClickHouse](https://clickhouse.yandex/) in Java, also provide a library for 
+integrating with [Apache Spark](https://github.com/apache/spark/).
 
+## CONTRIBUTE
+
+We welcome anyone that wants to help out in any way, whether that includes reporting problems, helping with documentations, or contributing code changes to fix bugs, add tests, or implement new features. Please follow [Contributing Guide](CONTRIBUTE.md).
+
+Supported by [JetBrains Open Source License](https://www.jetbrains.com/?from=ClickHouse-Native-JDBC) 2020-2021. 
+
+## JDBC Driver
+
+### Requirements
+
+- Java 8/11. 
+
+**Notes:** We only do test with Java LTS versions.
+
+### Differences from [yandex/clickhouse-jdbc](https://github.com/yandex/clickhouse-jdbc)
+
+* Data is organized and compressed by columns.
+* Implemented in the TCP Protocol, with higher performance than HTTP, here is the [benchmark report](docs/dev/benchmark.md).
+
+### Limitations
+
+* Not support non-values format.
+* Not support complex values expression, like `INSERT INTO test_table VALUES(toDate(123456))`.
+* Not support more compression method, like `ZSTD`.
+
+### Import
+
+- Gradle
+```groovy
+// (recommended) shaded version, available since 2.3-stable
+compile "com.github.housepower:clickhouse-native-jdbc-shaded:${clickhouse_native_jdbc_version}"
+
+// normal version
+compile "com.github.housepower:clickhouse-native-jdbc:${clickhouse_native_jdbc_version}"
 ```
-    git clone git@github.com:housepower/ClickHouse-Native-JDBC.git
-    cd ClickHouse-Native-JDBC
-    mvn clean package
-    #build single jar with dependencies
-    mvn clean package assembly:single -Dmaven.skip.assembly=false
-```
 
-## Maven central
+- Maven
 
-```java
+```xml
+<!-- (recommended) shaded version, available since 2.3-stable -->
+<dependency>
+    <groupId>com.github.housepower</groupId>
+    <artifactId>clickhouse-native-jdbc-shaded</artifactId>
+    <version>${clickhouse-native-jdbc.version}</version>
+</dependency>
+
+<!-- normal version -->
 <dependency>
     <groupId>com.github.housepower</groupId>
     <artifactId>clickhouse-native-jdbc</artifactId>
-    <version>2.2-stable</version>
+    <version>${clickhouse-native-jdbc.version}</version>
 </dependency>
 ```
 
-## Support Java8 or above
+## Integration with Spark
 
-## Differences from [Yandex/Clickhouse-JDBC](https://github.com/yandex/clickhouse-jdbc)
-* Data is organized and compressed by columns
-* We implemented it using the TCP Protocol, with higher performance than HTTP, here is the [benchmark](./Benchmark.md).
+### Requirements
 
-## Not Supported
-* Non-values format
-* Complex values expression, Like `INSERT INTO test_table VALUES(toDate(123456))`
-* More compression method, like `ZSTD`
+- Java 8, Scala 2.11/2.12, Spark 2.4.x
+- Or Java 8/11, Scala 2.12, Spark 3.0.x
 
-## Example
+**Notes:** Spark 2.3.x(EOL) should also work fine. Actually we do test on both Java 8 and Java 11, 
+but Spark official support on Java 11 since 3.0.0.
 
-Select query, see also [SimpleQuery.java](./src/main/java/examples/SimpleQuery.java)
-```java
-    Connection connection = DriverManager.getConnection("jdbc:clickhouse://127.0.0.1:9000");
+### Import
 
-    Statement stmt = connection.createStatement();
-    ResultSet rs = stmt.executeQuery("SELECT (number % 3 + 1) as n, sum(number) FROM numbers(10000000) GROUP BY n");
+- Gradle
 
-    while (rs.next()) {
-      System.out.println(rs.getInt(1) + "\t" + rs.getLong(2));
-    }
+```groovy
+// available since 2.4.0
+compile "com.github.housepower:clickhouse-integration-spark_2.11:${clickhouse_native_jdbc_version}"
 ```
 
-All DDL,DML queries, see also [ExecuteQuery.java](./src/main/java/examples/ExecuteQuery.java)
+- Maven
 
-```java
-    Connection connection = DriverManager.getConnection("jdbc:clickhouse://127.0.0.1:9000");
-
-    Statement stmt = connection.createStatement();
-    stmt.executeQuery("drop table if exists test_jdbc_example");
-    stmt.executeQuery("create table test_jdbc_example(day default toDate( toDateTime(timestamp) ), timestamp UInt32, name String, impressions UInt32) Engine=MergeTree(day, (timestamp, name), 8192)");
-    stmt.executeQuery("alter table test_jdbc_example add column costs Float32");
-    stmt.executeQuery("drop table test_jdbc_example");
+```xml
+<!-- available since 2.4.0 -->
+<dependency>
+    <groupId>com.github.housepower</groupId>
+    <artifactId>clickhouse-integration-spark_2.11</artifactId>
+    <version>${clickhouse-native-jdbc.version}</version>
+</dependency>
 ```
 
-Batch insert query, see also [BatchQuery.java](./src/main/java/examples/BatchQuery.java)
+## License
 
-``` java
-    Connection connection = DriverManager.getConnection("jdbc:clickhouse://127.0.0.1:9000");
-
-    Statement stmt = connection.createStatement();
-    stmt.executeQuery("drop table if exists test_jdbc_example");
-    stmt.executeQuery("create table test_jdbc_example(day Date, name String, age UInt8) Engine=Log");
-
-    PreparedStatement pstmt = connection.prepareStatement("INSERT INTO test_jdbc_example VALUES(?, ?, ?)");
-
-    for (int i = 0; i < 200; i++) {
-        pstmt.setDate(1, new Date(System.currentTimeMillis()));
-        pstmt.setString(2, "Zhang San" + i);
-        pstmt.setByte(3, (byte)i);
-        pstmt.addBatch();
-    }
-    pstmt.executeBatch();
-    stmt.executeQuery("drop table test_jdbc_example");
-```
+This project is distributed under the terms of the Apache License (Version 2.0). See [LICENSE](LICENSE) for details.
